@@ -32,7 +32,7 @@ export default function CompanyPage() {
 
   return (
     <div>
-      <Link to="/app/comptabilite" className="no-print mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600">
+      <Link to="/app/comptabilite" className="no-print mb-4 hidden lg:inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600">
         <ArrowLeft className="size-4" /> Mes entreprises
       </Link>
       <PageHeader
@@ -40,7 +40,7 @@ export default function CompanyPage() {
         title={company.data.name}
         actions={
           years.data && years.data.length > 0 ? (
-            <select className="field w-auto" value={fyId ?? ''} onChange={(e) => setFyId(Number(e.target.value))}>
+            <select className="field sm:w-auto" value={fyId ?? ''} onChange={(e) => setFyId(Number(e.target.value))}>
               {years.data.map((y) => <option key={y.id} value={y.id}>{y.label}{y.is_closed ? ' (clôturé)' : ''}</option>)}
             </select>
           ) : undefined
@@ -99,16 +99,16 @@ function EntriesTab({ companyId, fy, journals, accounts, base }: { companyId: nu
   return (
     <div className="space-y-4">
       <Card className="flex flex-wrap items-center gap-3 p-4">
-        <select className="field-sm w-auto" value={journal} onChange={(e) => setJournal(e.target.value)}>
+        <select className="field-sm sm:w-auto" value={journal} onChange={(e) => setJournal(e.target.value)}>
           <option value="">Tous les journaux</option>
           {journals.map((j) => <option key={j.id} value={j.id}>{j.code} — {j.label}</option>)}
         </select>
-        <select className="field-sm w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
+        <select className="field-sm sm:w-auto" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">Tous les statuts</option>
           <option value="draft">Brouillard</option>
           <option value="validated">Validées</option>
         </select>
-        <div className="flex-1" />
+        <div className="hidden flex-1 sm:block" />
         <ExportButtons path={`${base}/journal/?fiscal_year=${fy.id}`} name="journal" />
         {!fy.is_closed && <Button size="sm" onClick={() => setEditing(null)} icon={<Plus className="size-4" />}>Nouvelle écriture</Button>}
       </Card>

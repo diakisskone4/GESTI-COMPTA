@@ -38,7 +38,7 @@ export default function ModulePage() {
 
   return (
     <div>
-      <Link to={`/app/formation/${data.level_code}`} className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600">
+      <Link to={`/app/formation/${data.level_code}`} className="mb-4 hidden lg:inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600">
         <ArrowLeft className="size-4" /> Programme {data.level_code}
       </Link>
       <PageHeader eyebrow={`${data.level_code} · Module ${data.code}`} title={data.title} subtitle={data.objectives} />

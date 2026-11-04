@@ -24,3 +24,13 @@ npx cap add ios && npx cap sync ios && npx cap open ios               # Xcode (m
 ```
 
 Le backend accepte déjà les origines `capacitor://localhost` et `http://localhost` (variable `CORS_ALLOWED_ORIGINS`).
+
+## Expérience mobile intégrée
+
+- Barre d'onglets adaptée au rôle, barre d'application avec bouton retour, zones protégées (encoche, barre iOS).
+- Accueil en widgets (`frontend/src/modules/mobile/MobileHome.tsx`), menu complet (`/app/plus`).
+- Installation guidée : invite native sur Android, instructions Safari sur iPhone et iPad (`Install.tsx`).
+- Raccourcis par appui long sur l'icône (Android, Windows) et écrans de démarrage iOS (`public/splash/`).
+
+Limite : une PWA ne peut pas ajouter de widget sur l'écran d'accueil du téléphone. Il faut pour cela une
+application native (Swift/Kotlin), ce qui suppose des comptes Apple Developer et Google Play.

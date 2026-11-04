@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import { cx } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
+import { InstallCard } from '../modules/mobile/Install';
 
 const BT1 = ['Généralités sur la comptabilité', 'Bilan et compte de résultat', 'Comptes et partie double', 'Documents comptables',
   'Factures et opérations commerciales', 'Gestion des stocks', 'Rapprochement bancaire', 'Amortissements', 'Dépréciations et provisions',
@@ -189,6 +190,9 @@ export default function HomePage() {
           })}
         </div>
       </section>
+
+      {/* Installation sur téléphone et tablette */}
+      <div className="mx-auto mt-6 max-w-6xl px-4 sm:px-6 lg:hidden"><InstallCard /></div>
 
       {/* Approche adaptée au Mali */}
       <section id="mali" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-24 sm:px-6">

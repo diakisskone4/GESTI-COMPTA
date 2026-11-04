@@ -80,29 +80,30 @@ export default function EntryForm({ companyId, fiscalYear, journals, accounts, e
         <Field label="Libellé"><input className="field" value={label} onChange={(e) => setLabel(e.target.value)} required placeholder="Achat de marchandises" /></Field>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="w-full min-w-[640px] text-sm">
-          <thead>
+      {/* Tableau sur grand écran, fiches empilées sur téléphone */}
+      <div className="overflow-x-auto rounded-xl border-slate-200 sm:border">
+        <table className="w-full text-sm max-sm:block sm:min-w-[640px]">
+          <thead className="max-sm:hidden">
             <tr className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               <th className="w-32 px-2 py-2">Compte</th><th className="px-2 py-2">Intitulé / libellé</th>
               <th className="w-36 px-2 py-2 text-right">Débit</th><th className="w-36 px-2 py-2 text-right">Crédit</th><th className="w-10" />
             </tr>
           </thead>
-          <tbody>
+          <tbody className="max-sm:block max-sm:space-y-2.5">
             {lines.map((l, i) => {
               const acc = byCode.get(l.code.trim());
               return (
-                <tr key={i} className="border-t border-slate-100 align-top">
-                  <td className="px-1.5 py-1.5">
+                <tr key={i} className="border-slate-100 align-top max-sm:relative max-sm:grid max-sm:grid-cols-2 max-sm:gap-2 max-sm:rounded-xl max-sm:border max-sm:border-slate-200 max-sm:bg-paper/60 max-sm:p-3 max-sm:pr-11 sm:border-t">
+                  <td className="px-1.5 py-1.5 max-sm:col-span-2 max-sm:p-0">
                     <input list="accounts-list" className={cx('field-sm font-mono', l.code && !acc && 'border-red-400')} value={l.code} onChange={(e) => update(i, { code: e.target.value })} placeholder="601" />
                   </td>
-                  <td className="px-1.5 py-1.5">
+                  <td className="px-1.5 py-1.5 max-sm:col-span-2 max-sm:p-0">
                     <input className="field-sm" value={l.label} onChange={(e) => update(i, { label: e.target.value })} placeholder={acc?.label ?? 'Libellé de la ligne'} />
                     {acc && <div className="mt-0.5 truncate px-1 text-[11px] text-slate-400">{acc.label}</div>}
                   </td>
-                  <td className="px-1.5 py-1.5"><input inputMode="decimal" className="field-sm num text-right" value={l.debit} onFocus={() => autoBalance(i)} onChange={(e) => update(i, { debit: e.target.value, credit: e.target.value ? '' : l.credit })} /></td>
-                  <td className="px-1.5 py-1.5"><input inputMode="decimal" className="field-sm num text-right" value={l.credit} onChange={(e) => update(i, { credit: e.target.value, debit: e.target.value ? '' : l.debit })} /></td>
-                  <td className="px-1 py-1.5">
+                  <td className="px-1.5 py-1.5 max-sm:min-w-0 max-sm:p-0"><input inputMode="decimal" placeholder="Débit" className="field-sm num text-right" value={l.debit} onFocus={() => autoBalance(i)} onChange={(e) => update(i, { debit: e.target.value, credit: e.target.value ? '' : l.credit })} /></td>
+                  <td className="px-1.5 py-1.5 max-sm:min-w-0 max-sm:p-0"><input inputMode="decimal" placeholder="Crédit" className="field-sm num text-right" value={l.credit} onChange={(e) => update(i, { credit: e.target.value, debit: e.target.value ? '' : l.debit })} /></td>
+                  <td className="px-1 py-1.5 max-sm:absolute max-sm:right-1 max-sm:top-2 max-sm:p-0">
                     <button type="button" disabled={lines.length <= 2} onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))} className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30" aria-label="Supprimer">
                       <Trash2 className="size-4" />
                     </button>
@@ -111,9 +112,9 @@ export default function EntryForm({ companyId, fiscalYear, journals, accounts, e
               );
             })}
           </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
-              <td className="px-2 py-2.5" colSpan={2}>
+          <tfoot className="max-sm:mt-2.5 max-sm:block">
+            <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold max-sm:grid max-sm:grid-cols-2 max-sm:rounded-xl max-sm:border-t-0">
+              <td className="px-2 py-2.5 max-sm:col-span-2 max-sm:pb-0" colSpan={2}>
                 <span className={cx('inline-flex items-center gap-1.5 text-xs', balanced ? 'text-money-700' : 'text-red-600')}>
                   {balanced ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
                   {balanced ? 'Écriture équilibrée' : `Écart : ${formatNumber(Math.abs(totalD - totalC), 2)}`}
@@ -121,7 +122,7 @@ export default function EntryForm({ companyId, fiscalYear, journals, accounts, e
               </td>
               <td className="num px-3 py-2.5 text-right text-navy-900">{formatNumber(totalD, 2)}</td>
               <td className="num px-3 py-2.5 text-right text-navy-900">{formatNumber(totalC, 2)}</td>
-              <td />
+              <td className="max-sm:hidden" />
             </tr>
           </tfoot>
         </table>

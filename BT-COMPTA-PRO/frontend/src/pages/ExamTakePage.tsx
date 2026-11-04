@@ -85,7 +85,7 @@ export default function ExamTakePage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="sticky top-16 z-20 -mx-4 mb-6 border-b border-slate-200 bg-paper/90 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:bg-white/90">
+      <div className="sticky top-appbar z-20 -mx-4 mb-6 border-b border-slate-200 bg-paper/90 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:bg-white/90">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="truncate font-semibold text-navy-900">{session.quiz.title}</div>

@@ -3,15 +3,8 @@ import { Link } from 'react-router-dom';
 import { Alert, Badge, Card, formatDate, formatNumber, PageHeader, Progress, Spinner, Stat } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useFetch } from '../hooks/useFetch';
+import MobileHome, { type DashboardData as Dashboard } from '../modules/mobile/MobileHome';
 
-interface Dashboard {
-  levels: Record<'BT1' | 'BT2', { modules: number; chapters: number; completed: number; calculators: number }>;
-  exams: { count: number; average: string | null; available: number; recent: { id: number; quiz: string; level: string; grade: string; date: string }[] };
-  accounting: { companies: number; entries: number; drafts: number };
-  calculations: { recent: { id: number; slug: string; title: string; date: string }[] };
-  teaching?: { students: number; attempts: number; average: string | null; quizzes: number };
-  admin?: { users: number; by_role: Record<string, number>; companies: number; entries: number };
-}
 
 const QUICK = [
   { to: '/app/calculatrices/tva', label: 'HT / TVA / TTC', level: 'BT1' },
@@ -32,7 +25,9 @@ export default function DashboardPage() {
   if (error || !data) return <Alert tone="error">{error}</Alert>;
 
   return (
-    <div className="space-y-6">
+    <>
+    <div className="lg:hidden"><MobileHome data={data} user={user} /></div>
+    <div className="hidden space-y-6 lg:block">
       <PageHeader
         eyebrow={new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
         title={`${greet}, ${user?.first_name || user?.username}`}
@@ -132,5 +127,6 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
+    </>
   );
 }

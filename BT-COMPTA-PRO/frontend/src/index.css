@@ -16,9 +16,28 @@
   --color-paper: #f3f5f8;
 }
 
+@utility pb-tabbar {
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  @media (width >= 64rem) {
+    padding-bottom: 2rem;
+  }
+}
+
+@utility top-appbar {
+  top: calc(3.5rem + env(safe-area-inset-top));
+  @media (width >= 64rem) {
+    top: 4rem;
+  }
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  a, button, select, label {
+    touch-action: manipulation;
   }
   body {
     @apply bg-paper font-sans text-slate-800 antialiased;
@@ -75,5 +94,43 @@
   .card {
     box-shadow: none !important;
     break-inside: avoid;
+  }
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
+}
+
+@media (width < 64rem) {
+  /* iOS zoome sur les champs de moins de 16 px */
+  .field, .field-sm, select, textarea {
+    font-size: 16px;
+  }
+  /* Comportement d'application : pas de rebond ni de surbrillance sur la navigation */
+  body {
+    overscroll-behavior-y: none;
+  }
+  nav a, header a, nav button, header button {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+  .app-page {
+    animation: page-in 0.18s ease-out;
+  }
+}
+
+@media (width < 40rem) {
+  .sheet {
+    animation: sheet-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-page, .sheet {
+    animation: none;
   }
 }

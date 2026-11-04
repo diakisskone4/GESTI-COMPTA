@@ -62,7 +62,7 @@ export default function CalculatorPage() {
 
   return (
     <div>
-      <Link to="/app/calculatrices" className="no-print mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600">
+      <Link to="/app/calculatrices" className="no-print mb-4 hidden lg:inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600">
         <ArrowLeft className="size-4" /> Toutes les calculatrices
       </Link>
       <PageHeader
@@ -78,8 +78,8 @@ export default function CalculatorPage() {
         }
       />
 
-      <div className={`grid items-start gap-6 ${wide ? '' : 'xl:grid-cols-[minmax(380px,460px)_1fr]'}`}>
-        <Card className={`no-print p-5 ${wide ? '' : 'xl:sticky xl:top-24'}`}>
+      <div className={`grid grid-cols-1 items-start gap-6 ${wide ? '' : 'xl:grid-cols-[minmax(380px,460px)_1fr]'}`}>
+        <Card className={`no-print min-w-0 p-4 sm:p-5 ${wide ? '' : 'xl:sticky xl:top-24'}`}>
           <form onSubmit={run} className="space-y-5">
             <DynamicForm fields={meta.fields} values={values} onChange={setValues} errorField={err?.field} />
             {err && <Alert tone="error">{err.msg}</Alert>}

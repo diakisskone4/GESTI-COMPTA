@@ -15,9 +15,12 @@ export default defineConfig({
         short_name: 'BT Compta',
         description: 'Formation BT1/BT2, calculatrices comptables et comptabilité SYSCOHADA — Mali',
         lang: 'fr',
-        start_url: '/',
+        id: '/app',
+        start_url: '/app',
         scope: '/',
         display: 'standalone',
+        display_override: ['standalone'],
+        dir: 'ltr',
         orientation: 'any',
         background_color: '#F3F5F8',
         theme_color: '#102B55',
@@ -27,11 +30,19 @@ export default defineConfig({
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        // Appui long sur l'icône de l'application (Android, Windows)
+        shortcuts: [
+          { name: 'Calculatrices', short_name: 'Calculs', url: '/app/calculatrices', icons: [{ src: '/icons/shortcut-calc.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Mes cours', short_name: 'Cours', url: '/app/formation/BT1', icons: [{ src: '/icons/shortcut-cours.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Quiz et examens', short_name: 'Examens', url: '/app/examens', icons: [{ src: '/icons/shortcut-examens.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Gestion comptable', short_name: 'Compta', url: '/app/comptabilite', icons: [{ src: '/icons/shortcut-compta.png', sizes: '96x96', type: 'image/png' }] },
+        ],
       },
       workbox: {
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/admin\//],
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globIgnores: ['splash/**'],
         runtimeCaching: [
           {
             // Catalogue pédagogique et calculatrices consultables hors connexion

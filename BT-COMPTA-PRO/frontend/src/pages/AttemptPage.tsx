@@ -28,7 +28,7 @@ export default function AttemptPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Link to="/app/examens" className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600"><ArrowLeft className="size-4" /> Examens</Link>
+      <Link to="/app/examens" className="mb-4 hidden lg:inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand-600"><ArrowLeft className="size-4" /> Examens</Link>
       <div className={cx('relative overflow-hidden rounded-3xl p-6 text-white shadow-xl sm:p-8', grade >= 10 ? 'bg-money-600 shadow-money-600/25' : 'bg-navy-900 shadow-navy-900/25')}>
         <div className="pointer-events-none absolute -right-12 -top-12 size-48 rounded-full bg-white/10" />
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">

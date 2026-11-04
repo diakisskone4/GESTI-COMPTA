@@ -57,38 +57,40 @@ function TableField({ field, rows, onChange }: { field: FieldSpec; rows: Row[]; 
   const add = () => onChange([...rows, Object.fromEntries(cols.map((c) => [c.name, '']))]);
   const remove = (i: number) => onChange(rows.filter((_, j) => j !== i));
   return (
-    <div className="sm:col-span-2">
+    <div className="min-w-0 sm:col-span-2">
       <div className="mb-1.5 flex items-center justify-between">
         <span className="label mb-0">{field.label}</span>
         <Button type="button" size="sm" variant="secondary" onClick={add} icon={<Plus className="size-3.5" />}>Ligne</Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="w-full min-w-[560px] text-sm">
-          <thead>
+      {/* Tableau sur grand écran, fiches empilées sur téléphone */}
+      <div className="overflow-x-auto rounded-xl border-slate-200 sm:border">
+        <table className="w-full text-sm max-sm:block sm:min-w-[560px]">
+          <thead className="max-sm:hidden">
             <tr className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               <th className="w-8 px-2 py-2">#</th>
               {cols.map((c) => <th key={c.name} className="px-2 py-2">{c.label}</th>)}
               <th className="w-10" />
             </tr>
           </thead>
-          <tbody>
+          <tbody className="max-sm:block max-sm:space-y-2.5">
             {rows.map((row, i) => (
-              <tr key={i} className="border-t border-slate-100">
-                <td className="num px-2 py-1.5 text-xs text-slate-400">{i + 1}</td>
+              <tr key={i} className="border-slate-100 max-sm:relative max-sm:grid max-sm:grid-cols-2 max-sm:gap-x-2 max-sm:gap-y-2 max-sm:rounded-xl max-sm:border max-sm:border-slate-200 max-sm:bg-paper/60 max-sm:p-3 sm:border-t">
+                <td className="num px-2 py-1.5 text-xs text-slate-400 max-sm:col-span-2 max-sm:p-0 max-sm:font-semibold"><span className="sm:hidden">Ligne </span>{i + 1}</td>
                 {cols.map((c) => (
-                  <td key={c.name} className="px-1.5 py-1.5">
+                  <td key={c.name} className={cx('px-1.5 py-1.5 max-sm:min-w-0 max-sm:p-0', (c.type === 'text' || c.type === 'select') && cols.length !== 2 && 'max-sm:col-span-2')}>
+                    <span className="mb-1 block text-xs font-medium text-slate-500 sm:hidden">{c.label}</span>
                     <Scalar field={c} small value={row[c.name] ?? ''} onChange={(v) => update(i, c.name, v)} />
                   </td>
                 ))}
-                <td className="px-1.5">
-                  <button type="button" onClick={() => remove(i)} className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Supprimer la ligne">
+                <td className="px-1.5 max-sm:absolute max-sm:right-1 max-sm:top-1 max-sm:p-0">
+                  <button type="button" onClick={() => remove(i)} className="rounded-lg p-1.5 text-slate-400 max-sm:p-2 hover:bg-red-50 hover:text-red-600" aria-label="Supprimer la ligne">
                     <Trash2 className="size-4" />
                   </button>
                 </td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={cols.length + 2} className="px-3 py-6 text-center text-sm text-slate-400">Aucune ligne. Cliquez sur « Ligne » pour en ajouter.</td></tr>
+              <tr className="max-sm:block"><td colSpan={cols.length + 2} className="px-3 py-6 text-center max-sm:block text-sm text-slate-400">Aucune ligne. Cliquez sur « Ligne » pour en ajouter.</td></tr>
             )}
           </tbody>
         </table>
@@ -99,7 +101,7 @@ function TableField({ field, rows, onChange }: { field: FieldSpec; rows: Row[]; 
 
 export default function DynamicForm({ fields, values, onChange, errorField }: { fields: FieldSpec[]; values: FormValues; onChange: (v: FormValues) => void; errorField?: string | null }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {fields.map((f) =>
         f.type === 'table' ? (
           <TableField key={f.name} field={f} rows={(values[f.name] as Row[]) ?? []} onChange={(rows) => onChange({ ...values, [f.name]: rows })} />

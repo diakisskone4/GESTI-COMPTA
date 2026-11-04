@@ -1,54 +1,10 @@
-import {
-  BookOpen, Building2, Calculator, FileText, ChevronDown, ClipboardCheck, GraduationCap, LayoutDashboard, ListTree, LogOut, Menu,
-  School, ShieldCheck, TrendingUp, UserRound, WifiOff, X,
-} from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { ArrowLeft, ChevronDown, LogOut, UserRound, WifiOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import { cx } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
-import type { Role } from '../types';
-
-interface NavItem {
-  to: string;
-  label: string;
-  icon: ReactNode;
-  roles?: Role[];
-  end?: boolean;
-  badge?: 'BT1' | 'BT2';
-}
-
-const SECTIONS: { title: string; items: NavItem[] }[] = [
-  {
-    title: '',
-    items: [{ to: '/app', label: 'Tableau de bord', icon: <LayoutDashboard />, end: true }],
-  },
-  {
-    title: 'Formation',
-    items: [
-      { to: '/app/formation/BT1', label: 'Comptabilité générale', icon: <BookOpen />, badge: 'BT1' },
-      { to: '/app/formation/BT2', label: 'Analytique & gestion', icon: <GraduationCap />, badge: 'BT2' },
-      { to: '/app/examens', label: 'Quiz & examens', icon: <ClipboardCheck /> },
-      { to: '/app/sujets', label: 'Sujets & corrigés', icon: <FileText /> },
-      { to: '/app/progression', label: 'Ma progression', icon: <TrendingUp /> },
-    ],
-  },
-  {
-    title: 'Comptabilité',
-    items: [
-      { to: '/app/calculatrices', label: 'Calculatrices', icon: <Calculator /> },
-      { to: '/app/comptabilite', label: 'Gestion comptable', icon: <Building2 /> },
-      { to: '/app/plan-comptable', label: 'Plan comptable', icon: <ListTree /> },
-    ],
-  },
-  {
-    title: 'Gestion',
-    items: [
-      { to: '/app/enseignant', label: 'Espace enseignant', icon: <School />, roles: ['teacher', 'admin'] },
-      { to: '/app/administration', label: 'Administration', icon: <ShieldCheck />, roles: ['admin'] },
-    ],
-  },
-];
+import { SECTIONS, tabsFor, titleFor } from './nav';
 
 function useOnline() {
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -67,27 +23,28 @@ function useOnline() {
 
 export default function AppLayout() {
   const { user, logout, hasRole } = useAuth();
-  const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const online = useOnline();
+  const path = location.pathname.replace(/\/$/, '');
 
   useEffect(() => {
-    setOpen(false);
     setMenu(false);
+    window.scrollTo(0, 0);
   }, [location.pathname]);
 
   const initials = `${user?.first_name?.[0] ?? ''}${user?.last_name?.[0] ?? ''}`.toUpperCase() || user?.username?.[0]?.toUpperCase();
+  const tabs = tabsFor(user);
+  const isTabRoot = tabs.some((t) => t.to === path);
+  const focused = path.endsWith('/passer'); // épreuve en cours : pas de distraction
 
   const sidebar = (
     <nav className="flex h-full flex-col border-r border-white/5 bg-navy-950 text-white" aria-label="Navigation principale">
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/[0.06] px-5">
+      <div className="flex h-16 shrink-0 items-center border-b border-white/[0.06] px-5">
         <NavLink to="/app" aria-label="Accueil BT COMPTA PRO">
           <Logo light />
         </NavLink>
-        <button className="rounded-lg p-1.5 text-white/60 hover:bg-white/10 hover:text-white lg:hidden" onClick={() => setOpen(false)} aria-label="Fermer le menu">
-          <X className="size-5" />
-        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-5 [scrollbar-width:thin]">
@@ -149,32 +106,44 @@ export default function AppLayout() {
   );
 
   return (
-    <div className="min-h-screen lg:pl-[272px]">
+    <div className="min-h-dvh lg:pl-[272px]">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[272px] lg:block">{sidebar}</aside>
-      {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-navy-950/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-[86%] max-w-xs shadow-2xl">{sidebar}</aside>
-        </div>
-      )}
 
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200/70 bg-paper/85 px-4 backdrop-blur-md sm:px-6 lg:px-8">
-        <button className="-ml-1 rounded-lg p-2 text-slate-600 hover:bg-white lg:hidden" onClick={() => setOpen(true)} aria-label="Ouvrir le menu">
-          <Menu className="size-5" />
-        </button>
-        <div className="lg:hidden">
-          <Logo />
+      {/* Barre d'application : téléphone et tablette */}
+      <header className="no-print sticky top-0 z-30 bg-navy-900 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pt-[env(safe-area-inset-top)] text-white lg:hidden">
+        <div className="flex h-14 items-center gap-1 px-2">
+          {isTabRoot ? (
+            <Link to="/app" className="pl-2" aria-label="Accueil"><Logo light /></Link>
+          ) : (
+            <>
+              <button onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/app'))} className="grid size-11 place-items-center rounded-xl active:bg-white/10" aria-label="Retour">
+                <ArrowLeft className="size-5" />
+              </button>
+              <span className="min-w-0 truncate text-[17px] font-semibold">{titleFor(path)}</span>
+            </>
+          )}
+          <div className="flex-1" />
+          <Link to="/app/profil" className="mr-1 grid size-9 place-items-center rounded-full bg-brand-600 text-xs font-bold" aria-label="Mon profil">{initials}</Link>
         </div>
+        {!online && (
+          <div className="flex items-center justify-center gap-1.5 bg-amber-500 py-1 text-xs font-semibold text-navy-950">
+            <WifiOff className="size-3.5" /> Hors connexion : seuls les cours déjà ouverts restent disponibles
+          </div>
+        )}
+      </header>
+
+      {/* En-tête ordinateur */}
+      <header className="sticky top-0 z-30 hidden h-16 items-center gap-3 border-b border-slate-200/70 bg-paper/85 px-8 backdrop-blur-md lg:flex">
         <div className="flex-1" />
         {!online && (
-          <span className="hidden items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 sm:inline-flex">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
             <WifiOff className="size-3.5" /> Hors connexion
           </span>
         )}
         <div className="relative">
           <button onClick={() => setMenu((m) => !m)} className="flex items-center gap-2.5 rounded-xl py-1.5 pl-1.5 pr-2.5 hover:bg-white">
             <span className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-brand-600 to-navy-800 text-xs font-bold text-white">{initials}</span>
-            <span className="hidden text-left leading-tight sm:block">
+            <span className="text-left leading-tight">
               <span className="block text-sm font-semibold text-navy-900">{user?.first_name || user?.username}</span>
               <span className="block text-[11px] text-slate-500">{user?.role_label}</span>
             </span>
@@ -197,9 +166,30 @@ export default function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <main key={location.pathname} className={cx('app-page mx-auto max-w-[1400px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8', focused ? 'pb-8' : 'pb-tabbar')}>
         <Outlet />
       </main>
+
+      {/* Onglets : téléphone et tablette */}
+      {!focused && (
+        <nav className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden" aria-label="Onglets">
+          <ul className="mx-auto grid max-w-2xl grid-cols-5">
+            {tabs.map((tab) => {
+              const active = tab.match.length ? tab.match.some((m) => path.startsWith(m)) : path === tab.to;
+              return (
+                <li key={tab.label}>
+                  <Link to={tab.to} aria-current={active ? 'page' : undefined}
+                    className={cx('flex h-[58px] flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors active:scale-95 [&_svg]:size-[22px]',
+                      active ? 'text-brand-600' : 'text-slate-500')}>
+                    <span className={cx('grid h-7 w-14 place-items-center rounded-full transition-colors', active && 'bg-brand-50')}>{tab.icon}</span>
+                    {tab.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )}
     </div>
   );
 }

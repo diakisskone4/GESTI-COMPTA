@@ -26,6 +26,7 @@ const ProgressPage = lazy(() => import('./pages/ProgressPage'));
 const TeacherPage = lazy(() => import('./pages/TeacherPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const MorePage = lazy(() => import('./pages/MorePage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="tentatives/:id" element={<AttemptPage />} />
           <Route path="progression" element={<ProgressPage />} />
           <Route path="profil" element={<ProfilePage />} />
+          <Route path="plus" element={<MorePage />} />
           <Route path="enseignant" element={<RequireAuth roles={['teacher', 'admin']}><TeacherPage /></RequireAuth>} />
           <Route path="administration" element={<RequireAuth roles={['admin']}><AdminPage /></RequireAuth>} />
         </Route>
