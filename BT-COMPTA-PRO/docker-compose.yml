@@ -1,0 +1,82 @@
+# BT COMPTA PRO — déploiement production (VPS Ubuntu).
+# Prérequis : fichier .env à la racine (voir .env.production.example) et certificat SSL (scripts/init-ssl.sh).
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      retries: 5
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_ENGINE: postgresql
+      DB_HOST: db
+      DEBUG: "False"
+    volumes:
+      - static:/app/staticfiles
+      - logs:/app/logs
+      - media:/app/media   # sujets et corrigés déposés (jamais servis directement par Nginx)
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+      ADMIN_URL: ${ADMIN_URL:-admin/}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static:/srv/static:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      - backend
+
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: ${DB_USER}
+      PGPASSWORD: ${DB_PASSWORD}
+      PGDATABASE: ${DB_NAME}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: /bin/sh -c "while :; do sh /backup.sh; sleep 86400; done"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  static:
+  logs:
+  media:
