@@ -23,7 +23,7 @@ def env_list(name: str, default: str = '') -> list[str]:
 
 
 # Vercel définit VERCEL=1 pendant le build et à l'exécution (disque en lecture seule, fonctions serverless).
-ON_VERCEL = bool(os.getenv('VERCEL'))
+ON_VERCEL = any(os.getenv(v) for v in ('VERCEL', 'VERCEL_ENV', 'VERCEL_URL'))
 DATABASE_URL = os.getenv('DATABASE_URL', '')
 
 DEBUG = env_bool('DEBUG', False)
@@ -269,8 +269,12 @@ if 'test' in sys.argv:
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']  # tests plus rapides uniquement
 
 LOG_DIR = BASE_DIR / 'logs'
-if not ON_VERCEL:
-    LOG_DIR.mkdir(exist_ok=True)
+LOG_TO_FILES = not ON_VERCEL
+if LOG_TO_FILES:
+    try:
+        LOG_DIR.mkdir(exist_ok=True)
+    except OSError:  # disque en lecture seule : ne jamais empêcher l'application de démarrer
+        LOG_TO_FILES = False
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -303,7 +307,7 @@ LOGGING = {
     'root': {'handlers': ['console', 'file'], 'level': os.getenv('LOG_LEVEL', 'INFO')},
 }
 
-if ON_VERCEL:
+if not LOG_TO_FILES:
     # Disque en lecture seule : journaux sur la sortie standard, consultables dans le tableau de bord Vercel.
     del LOGGING['handlers']['file'], LOGGING['handlers']['security_file']
     LOGGING['root']['handlers'] = ['console']

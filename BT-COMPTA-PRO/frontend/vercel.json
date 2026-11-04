@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://bt-compta-pro-api.vercel.app/api/$1" },
+    { "source": "/api/(.*)", "destination": "https://gesti-compta.vercel.app/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
