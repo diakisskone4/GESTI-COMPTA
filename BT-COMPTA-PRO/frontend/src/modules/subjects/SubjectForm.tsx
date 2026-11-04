@@ -5,7 +5,7 @@ import { useFetch } from '../../hooks/useFetch';
 import { api, errorMessage } from '../../services/api';
 import type { ExamSubject, Module, Quiz } from '../../types';
 
-const MAX_MB = 10;
+const MAX_MB = Number(import.meta.env.VITE_MAX_UPLOAD_MB ?? 10);
 const ACCEPT = '.pdf,.docx,.png,.jpg,.jpeg';
 
 function FilePicker({ label, file, current, onChange, onRemove, required }: {
@@ -79,6 +79,9 @@ export default function SubjectForm({ subject, onDone }: { subject?: ExamSubject
     e.preventDefault();
     setError('');
     if (!subject && !subjectFile) return setError('Joignez le fichier du sujet.');
+    if ((subjectFile?.size ?? 0) + (correctionFile?.size ?? 0) > MAX_MB * 1024 * 1024) {
+      return setError(`Le sujet et le corrigé ne doivent pas dépasser ${MAX_MB} Mo au total. Compressez les PDF ou envoyez le corrigé séparément.`);
+    }
     const data = new FormData();
     Object.entries(form).forEach(([k, v]) => {
       if (typeof v === 'boolean') data.append(k, v ? 'true' : 'false');

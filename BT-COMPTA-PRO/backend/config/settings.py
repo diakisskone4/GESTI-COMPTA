@@ -6,6 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 import os
 import sys
+from urllib.parse import parse_qsl, unquote, urlparse
 
 from dotenv import load_dotenv
 
@@ -21,6 +22,10 @@ def env_list(name: str, default: str = '') -> list[str]:
     return [item.strip() for item in os.getenv(name, default).split(',') if item.strip()]
 
 
+# Vercel définit VERCEL=1 pendant le build et à l'exécution (disque en lecture seule, fonctions serverless).
+ON_VERCEL = bool(os.getenv('VERCEL'))
+DATABASE_URL = os.getenv('DATABASE_URL', '')
+
 DEBUG = env_bool('DEBUG', False)
 SECRET_KEY = os.getenv('SECRET_KEY', '')
 if not SECRET_KEY:
@@ -30,6 +35,8 @@ if not SECRET_KEY:
         raise RuntimeError('SECRET_KEY doit être défini en production.')
 
 ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+# Adresses attribuées automatiquement par Vercel à ce déploiement.
+ALLOWED_HOSTS += [h for h in (os.getenv('VERCEL_URL'), os.getenv('VERCEL_PROJECT_PRODUCTION_URL')) if h]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -81,8 +88,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# --- Base de données : PostgreSQL par défaut, SQLite uniquement si DB_ENGINE=sqlite ---
-if os.getenv('DB_ENGINE', 'postgresql').lower() == 'sqlite':
+# --- Base de données : DATABASE_URL (Neon), sinon PostgreSQL local, SQLite uniquement si DB_ENGINE=sqlite ---
+if DATABASE_URL:
+    _url = urlparse(DATABASE_URL)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': _url.path.lstrip('/'),
+            'USER': unquote(_url.username or ''),
+            'PASSWORD': unquote(_url.password or ''),
+            'HOST': _url.hostname,
+            'PORT': _url.port or 5432,
+            'OPTIONS': dict(parse_qsl(_url.query)),  # sslmode=require, channel_binding=require…
+            # Le pooler de Neon (PgBouncer, mode transaction) gère les connexions :
+            # pas de connexion persistante ni de curseur serveur côté Django.
+            'CONN_MAX_AGE': 0,
+            'DISABLE_SERVER_SIDE_CURSORS': True,
+        }
+    }
+elif os.getenv('DB_ENGINE', 'postgresql').lower() == 'sqlite':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -188,7 +212,16 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
 
 # Fichiers déposés (sujets et corrigés) : jamais servis publiquement, uniquement via l'API avec contrôle des droits.
 MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', BASE_DIR / 'media'))
-MAX_UPLOAD_MB = int(os.getenv('MAX_UPLOAD_MB', '10'))
+# Vercel refuse les requêtes de plus de 4,5 Mo : 4 Mo au total par envoi sur cette plateforme.
+MAX_UPLOAD_MB = int(os.getenv('MAX_UPLOAD_MB', '4' if ON_VERCEL else '10'))
+if DATABASE_URL:
+    # Pas de disque durable ni de mémoire partagée en serverless : fichiers et compteurs
+    # de limitation de débit sont conservés dans PostgreSQL.
+    STORAGES = {
+        'default': {'BACKEND': 'core.storage.DatabaseStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
+    CACHES = {'default': {'BACKEND': 'django.core.cache.backends.db.DatabaseCache', 'LOCATION': 'django_cache'}}
 FILE_UPLOAD_PERMISSIONS = 0o640
 CALC_MAX_TABLE_ROWS = int(os.getenv('CALC_MAX_TABLE_ROWS', '300'))
 
@@ -203,6 +236,7 @@ EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', True)
+EMAIL_TIMEOUT = 10
 
 # Adresse de l'administration Django : à personnaliser en production pour la rendre moins exposée.
 ADMIN_URL = os.getenv('ADMIN_URL', 'admin/').strip('/') + '/'
@@ -223,7 +257,8 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_AGE = 60 * 60 * 8
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', True)
+    # Vercel redirige déjà vers HTTPS : une seconde redirection risquerait une boucle derrière ses proxys.
+    SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', not ON_VERCEL)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
@@ -234,7 +269,8 @@ if 'test' in sys.argv:
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']  # tests plus rapides uniquement
 
 LOG_DIR = BASE_DIR / 'logs'
-LOG_DIR.mkdir(exist_ok=True)
+if not ON_VERCEL:
+    LOG_DIR.mkdir(exist_ok=True)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -266,3 +302,10 @@ LOGGING = {
     },
     'root': {'handlers': ['console', 'file'], 'level': os.getenv('LOG_LEVEL', 'INFO')},
 }
+
+if ON_VERCEL:
+    # Disque en lecture seule : journaux sur la sortie standard, consultables dans le tableau de bord Vercel.
+    del LOGGING['handlers']['file'], LOGGING['handlers']['security_file']
+    LOGGING['root']['handlers'] = ['console']
+    for _logger in LOGGING['loggers'].values():
+        _logger['handlers'] = ['console']

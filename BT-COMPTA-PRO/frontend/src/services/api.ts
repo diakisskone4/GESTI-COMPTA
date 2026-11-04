@@ -79,6 +79,7 @@ export function errorMessage(err: unknown, fallback = 'Une erreur est survenue.'
   const e = err as AxiosError<unknown>;
   if (!e?.response) return e?.message === 'Network Error' ? 'Serveur injoignable. Vérifiez votre connexion.' : fallback;
   const data = e.response.data as Record<string, unknown> | string | undefined;
+  if (e.response.status === 413) return 'Fichier trop volumineux pour être envoyé.';
   if (e.response.status === 429) return 'Trop de tentatives. Patientez avant de réessayer.';
   if (e.response.status >= 500) return 'Le serveur a rencontré un problème. Réessayez dans un instant.';
   if (!data || typeof data === 'string') return fallback;

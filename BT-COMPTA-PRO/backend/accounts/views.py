@@ -214,15 +214,14 @@ class PasswordResetRequestView(PublicAuthView):
             token = default_token_generator.make_token(user)
             link = f'{settings.FRONTEND_URL}/reinitialiser-mot-de-passe?uid={uid}&token={token}'
             minutes = settings.PASSWORD_RESET_TIMEOUT // 60
-            send_mail(
-                'BT COMPTA PRO — Réinitialisation de votre mot de passe',
+            notify(
+                user, 'Réinitialisation de votre mot de passe',
                 f'Bonjour {user.first_name or user.username},\n\n'
                 f'Une demande de réinitialisation du mot de passe a été faite pour votre compte.\n'
                 f'Pour choisir un nouveau mot de passe, ouvrez ce lien (valable {minutes} minutes, utilisable une seule fois) :\n\n'
                 f'{link}\n\n'
                 'Si vous n\'êtes pas à l\'origine de cette demande, ignorez ce message : votre mot de passe reste inchangé.\n\n'
-                'L\'équipe BT COMPTA PRO',
-                settings.DEFAULT_FROM_EMAIL, [user.email])
+                'L\'équipe BT COMPTA PRO')
             log_action(request, 'auth.password_reset_requested', user, user=user)
         return Response({'detail': 'Si un compte correspond à cette adresse, un e-mail de réinitialisation vient d\'être envoyé.'})
 

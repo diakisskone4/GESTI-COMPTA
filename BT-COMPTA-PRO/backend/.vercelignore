@@ -1,0 +1,11 @@
+.env
+.env.*
+logs/
+media/
+staticfiles/
+tests/
+__pycache__/
+*.pyc
+db.sqlite3
+Dockerfile
+entrypoint.sh

@@ -173,3 +173,29 @@ class ExamSubjectTests(TestCase):
         sid = self.upload(is_published='false').json()['id']
         self.assertEqual(self.s.get(f'/api/exams/subjects/{sid}/').status_code, 404)
         self.assertEqual(self.s.get(f'/api/exams/subjects/{sid}/subject-file/').status_code, 404)
+
+
+@override_settings(STORAGES={'default': {'BACKEND': 'core.storage.DatabaseStorage'},
+                             'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}})
+class DatabaseStorageTests(TestCase):
+    """Mode Vercel : les fichiers vivent dans PostgreSQL et restent protégés par l'API."""
+
+    def test_upload_read_delete(self):
+        from core.models import StoredFile
+        cache.clear()
+        teacher = User.objects.create_user('prof', 'prof@test.ml', PASSWORD, role='teacher')
+        student = User.objects.create_user('eleve', 'eleve@test.ml', PASSWORD, role='student')
+        t, s = APIClient(), APIClient()
+        t.force_authenticate(teacher)
+        s.force_authenticate(student)
+        r = t.post('/api/exams/subjects/', {'title': 'Sujet', 'level': 'BT1',
+                                            'subject_file': SimpleUploadedFile('sujet.pdf', PDF, content_type='application/pdf')}, format='multipart')
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertEqual(StoredFile.objects.count(), 1)
+        sid = r.json()['id']
+        f = s.get(f'/api/exams/subjects/{sid}/subject-file/')
+        self.assertEqual(f.status_code, 200)
+        self.assertEqual(b''.join(f.streaming_content), PDF)
+        self.assertEqual(APIClient().get(f'/api/exams/subjects/{sid}/subject-file/').status_code, 401)
+        self.assertEqual(t.delete(f'/api/exams/subjects/{sid}/').status_code, 204)
+        self.assertEqual(StoredFile.objects.count(), 0)
