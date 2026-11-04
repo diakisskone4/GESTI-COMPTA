@@ -1,0 +1,7 @@
+postgresql://cyber_imc_user:AXGaKcUlGm4h2U9MNswb8vcEmP2Ng98J@dpg-dadd9q67bikc73als7b0-a/cyber_imc
+
+postgresql://gesti_user:6lvaQyMWRXPjg5So60gmYVARy1QNFhnh@dpg-dav5fp17lnhs73aussm0-a/gesti_scolaire
+
+http://zavu.dev/
+
+Je veux creer un espace pour les developpeur moi un mon equipes ou nous pourrons creer les comptes de Entablissements , leur données des acces de 3 , 6, 12 , 24 mois et la partie pourrait etre d'activer ou de desactiver et je veux que sa soit utiliser pas plus de 50 établisement lorsqu'ont crait le compte administrateur de l'etablissement c'est a lui de fair sa gestion  de son coté et je ne veux pas que les differents etablissement voie les données de l'autres chacun a son espace de gestion c'est pour n'es pas refaire un autre deployement seul l'espace de l'equipe developpeur qui voir les etablissement qui utilise l'application et leurs nombres je veux pas que l'espace developpeur soit visibles par les administrateur qui s'utilise l'application creation du Compte developper pour avoir acces a son espace de gestion sur un autre angle pas sur le register mais un resgiter priver pour l'equipe de les autres ne pouront pas voir seul l'equipe a le droit de l'utiliser
